@@ -8,6 +8,8 @@ import HerbDetail from "./pages/HerbDetail";
 import Auth from "./pages/Auth";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
+import FloatingBot from "@/components/FloatingBot";
+
 
 const queryClient = new QueryClient();
 
