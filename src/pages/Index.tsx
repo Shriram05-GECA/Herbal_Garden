@@ -199,7 +199,8 @@ const Index = () => {
             ))}
           </div>
         )}
-      </div>
+      </div>  <FloatingBot />
+
     </div>
   );
 };
