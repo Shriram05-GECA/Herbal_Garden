@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Remedies AI 💊</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: #f5fff5;
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: start;
+      min-height: 100vh;
+      margin: 0;
+      padding: 40px 20px;
+    }
+    h1 {
+      color: #2e7d32;
+      margin-bottom: 10px;
+    }
+    textarea {
+      width: 100%;
+      max-width: 500px;
+      height: 100px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 2px solid #2e7d32;
+      resize: none;
+      font-size: 16px;
+      outline: none;
+    }
+    button {
+      margin-top: 15px;
+      background: #2e7d32;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #1b5e20;
+    }
+    pre {
+      margin-top: 25px;
+      background: #e8f5e9;
+      border-radius: 10px;
+      padding: 20px;
+      max-width: 600px;
+      white-space: pre-wrap;
+      border: 1px solid #c8e6c9;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌿 Remedies AI</h1>
+  <p>Describe your physical problem below:</p>
+  <textarea id="userInput" placeholder="e.g., sore throat, headache, acne..."></textarea>
+  <button onclick="sendToWebhook()">Get Remedy</button>
+
+  <pre id="responseBox">Response will appear here...</pre>
+
+  <script>
+    async function sendToWebhook() {
+      const input = document.getElementById("userInput").value.trim();
+      const box = document.getElementById("responseBox");
+
+      if (!input) {
+        box.textContent = "⚠️ Please describe your symptoms first.";
+        return;
+      }
+
+      box.textContent = "🩺 Thinking... please wait...";
+
+      try {
+        const res = await fetch("https://sumitchaure.app.n8n.cloud/webhook/03add49f-f070-4a69-b142-e1bd48b92c52", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: input })
+        });
+
+        const text = await res.text();
+        box.textContent = text || "⚠️ No response received.";
+      } catch (err) {
+        box.textContent = "❌ Error connecting to Remedies AI.";
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
