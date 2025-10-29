@@ -12,6 +12,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "react-i18next";
 import { PlantScanner } from "@/components/PlantScanner";
 import { useUserRole } from "@/hooks/useUserRole";
+import FloatingBot from "@/components/FloatingBot";
 
 interface Herb {
   id: string;
