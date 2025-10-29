@@ -1,9 +1,8 @@
 import { useState, useRef } from "react";
-import { Camera, Upload, Loader2, X } from "lucide-react";
+import { Camera, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 
 interface PlantIdentification {
@@ -28,39 +27,41 @@ export const PlantScanner = () => {
   const convertImageToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        resolve(base64String);
-      };
+      reader.onloadend = () => resolve(reader.result as string);
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    // Show preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
 
     setIsScanning(true);
     setResult(null);
 
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+
     try {
       const base64Image = await convertImageToBase64(file);
 
-      const { data, error } = await supabase.functions.invoke('identify-plant', {
-        body: { images: [base64Image] }
+      const response = await fetch("https://api.plant.id/v2/identify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Api-Key": import.meta.env.VITE_PLANT_ID_API_KEY,
+        },
+        body: JSON.stringify({
+          images: [base64Image],
+          similar_images: true,
+        }),
       });
 
-      if (error) throw error;
+      const data = await response.json();
 
-      if (data?.suggestions && data.suggestions.length > 0) {
+      if (data?.suggestions?.length > 0) {
         const topResult = data.suggestions[0];
         setResult({
           common_names: topResult.plant_details?.common_names || [],
@@ -76,15 +77,15 @@ export const PlantScanner = () => {
       } else {
         toast({
           title: "No Match Found",
-          description: "Could not identify this plant. Try a clearer image.",
+          description: "Try a clearer image or different angle.",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Plant identification error:', error);
+      console.error("Plant ID error:", error);
       toast({
-        title: "Identification Failed",
-        description: "Failed to identify plant. Please try again.",
+        title: "Error",
+        description: "Unable to identify this plant.",
         variant: "destructive",
       });
     } finally {
@@ -95,9 +96,7 @@ export const PlantScanner = () => {
   const handleClear = () => {
     setImagePreview(null);
     setResult(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -108,25 +107,30 @@ export const PlantScanner = () => {
           Plant Scanner
         </CardTitle>
         <CardDescription>
-          Upload or take a photo to identify any plant
+          Tap the camera icon to identify a plant instantly 🌿
         </CardDescription>
       </CardHeader>
+
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
+        <div className="flex justify-center">
           <Button
             onClick={() => fileInputRef.current?.click()}
-            className="flex-1"
+            className="w-14 h-14 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center"
             disabled={isScanning}
           >
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Image
+            {isScanning ? (
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            ) : (
+              <Camera className="h-6 w-6 text-primary" />
+            )}
           </Button>
+
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
             capture="environment"
-            onChange={handleImageUpload}
+            onChange={handleImageCapture}
             className="hidden"
           />
         </div>
@@ -159,37 +163,30 @@ export const PlantScanner = () => {
         {result && (
           <Card className="bg-muted">
             <CardContent className="pt-6 space-y-3">
-              <div>
-                <h3 className="font-bold text-xl text-primary">{result.scientific_name}</h3>
-                {result.common_names && result.common_names.length > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    Common names: {result.common_names.join(', ')}
-                  </p>
-                )}
-              </div>
-              
+              <h3 className="font-bold text-xl text-primary">{result.scientific_name}</h3>
+              {result.common_names?.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Common names: {result.common_names.join(", ")}
+                </p>
+              )}
               {result.probability && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Confidence:</span>
-                  <span className="text-sm text-primary font-bold">
+                <p className="text-sm font-medium">
+                  Confidence:{" "}
+                  <span className="text-primary font-bold">
                     {(result.probability * 100).toFixed(1)}%
                   </span>
-                </div>
+                </p>
               )}
-
               {result.taxonomy && (
                 <div className="text-sm">
-                  <p><span className="font-medium">Family:</span> {result.taxonomy.family}</p>
-                  <p><span className="font-medium">Genus:</span> {result.taxonomy.genus}</p>
+                  <p><strong>Family:</strong> {result.taxonomy.family}</p>
+                  <p><strong>Genus:</strong> {result.taxonomy.genus}</p>
                 </div>
               )}
-
               {result.wiki_description?.value && (
-                <div className="text-sm">
-                  <p className="font-medium mb-1">Description:</p>
-                  <p className="text-muted-foreground line-clamp-4">
-                    {result.wiki_description.value}
-                  </p>
+                <div className="text-sm text-muted-foreground">
+                  <p><strong>Description:</strong></p>
+                  <p>{result.wiki_description.value}</p>
                 </div>
               )}
             </CardContent>
