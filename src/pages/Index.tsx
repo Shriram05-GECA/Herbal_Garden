@@ -14,6 +14,9 @@ import { PlantScanner } from "@/components/PlantScanner";
 import { useUserRole } from "@/hooks/useUserRole";
 import FloatingBot from "@/components/FloatingBot";
 
+import HeroSection from "@/components/HeroSection";
+
+
 interface Herb {
   id: string;
   name: string;
