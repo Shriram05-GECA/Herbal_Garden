@@ -130,120 +130,15 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* 🎬 Hero Section with Background Video */}
-      <div className="relative h-[80vh] flex items-center justify-center overflow-hidden">
-        {/* Background Video */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-        >
-          <source src="/plantvideo.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+   <HeroSection
+  user={user}
+  isAdmin={isAdmin}
+  navigate={navigate}
+  handleSignOut={handleSignOut}
+  title={t("title")}
+  subtitle={t("subtitle")}
+/>
 
-        {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-background"></div>
-
-        {/* Navigation and Content */}
-        <div className="relative z-10 container mx-auto px-4 text-center">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex gap-2">
-              {user ? (
-                <>
-                  {isAdmin && (
-                    <Button onClick={() => navigate("/admin")} variant="default">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Plant
-                    </Button>
-                  )}
-                  <Button onClick={handleSignOut} variant="outline">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                  </Button>
-                </>
-              ) : (
-                <Button onClick={() => navigate("/auth")} variant="default">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Sign In
-                </Button>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              <LanguageSelector />
-              <ThemeToggle />
-            </div>
-          </div>
-
-          {/* Hero Title */}
-          <div className="flex flex-col items-center justify-center h-full mt-20">
-            <div className="flex items-center justify-center gap-3 mb-4 animate-fade-in">
-              <Leaf className="h-12 w-12 text-green-400 animate-pulse" />
-              <h1 className="text-5xl font-bold text-white drop-shadow-lg">
-                {t("title")}
-              </h1>
-            </div>
-            <p className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto animate-fade-in">
-              {t("subtitle")}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* 🌿 Plant Scanner */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <PlantScanner />
-        </div>
-
-        {/* 🔍 Search and Filter */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              placeholder={t("search")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full md:w-48">
-              <SelectValue placeholder={t("category")} />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {t(cat)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* 🪴 Herb Grid */}
-        {isLoading ? (
-          <div className="text-center py-20">
-            <Leaf className="h-12 w-12 animate-spin mx-auto text-primary" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredHerbs.map((herb) => (
-              <HerbCard
-                key={herb.id}
-                {...herb}
-                scientificName={herb.scientific_name}
-                imageUrl={herb.image_url}
-              />
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* 🤖 Floating Chat Bot */}
       <FloatingBot />
