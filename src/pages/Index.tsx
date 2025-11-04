@@ -39,7 +39,7 @@ const Index = () => {
 
   useEffect(() => {
     fetchHerbs();
-    
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
@@ -67,7 +67,11 @@ const Index = () => {
       if (error) throw error;
       setHerbs(data || []);
     } catch (error) {
-      toast({ title: "Error fetching herbs", description: "Please try again", variant: "destructive" });
+      toast({
+        title: "Error fetching herbs",
+        description: "Please try again",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -75,43 +79,47 @@ const Index = () => {
 
   const translateHerbs = async () => {
     const translated: Record<string, Herb> = {};
-    
+
     for (const herb of herbs) {
       try {
-        const response = await supabase.functions.invoke('translate-plant', {
-          body: { herb, targetLanguage: i18n.language }
+        const response = await supabase.functions.invoke("translate-plant", {
+          body: { herb, targetLanguage: i18n.language },
         });
-        
+
         if (response.data) {
           translated[herb.id] = response.data;
         }
       } catch (error) {
-        console.error('Translation failed for herb:', herb.name, error);
+        console.error("Translation failed for herb:", herb.name, error);
       }
     }
-    
+
     setTranslatedHerbs(translated);
   };
 
   const filterHerbs = () => {
-    const herbsToFilter = i18n.language === 'en' ? herbs : herbs.map(h => translatedHerbs[h.id] || h);
+    const herbsToFilter =
+      i18n.language === "en" ? herbs : herbs.map((h) => translatedHerbs[h.id] || h);
     let filtered = herbsToFilter;
-    
+
     if (searchQuery) {
-      filtered = filtered.filter(herb => 
-        herb.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        herb.description.toLowerCase().includes(searchQuery.toLowerCase())
+      filtered = filtered.filter(
+        (herb) =>
+          herb.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          herb.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
+
     if (categoryFilter !== "all") {
-      filtered = filtered.filter(herb => herb.category.toLowerCase() === categoryFilter);
+      filtered = filtered.filter(
+        (herb) => herb.category.toLowerCase() === categoryFilter
+      );
     }
-    
+
     setFilteredHerbs(filtered);
   };
 
-  const categories = ["all", ...new Set(herbs.map(h => h.category.toLowerCase()))];
+  const categories = ["all", ...new Set(herbs.map((h) => h.category.toLowerCase()))];
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -119,9 +127,26 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-accent/10 to-background py-20">
-        <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-background text-foreground">
+      {/* 🎬 Hero Section with Background Video */}
+      <div className="relative h-[80vh] flex items-center justify-center overflow-hidden">
+        {/* Background Video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="/plant.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-background"></div>
+
+        {/* Navigation and Content */}
+        <div className="relative z-10 container mx-auto px-4 text-center">
           <div className="flex justify-between items-center mb-6">
             <div className="flex gap-2">
               {user ? (
@@ -144,42 +169,52 @@ const Index = () => {
                 </Button>
               )}
             </div>
+
             <div className="flex gap-2">
               <LanguageSelector />
               <ThemeToggle />
             </div>
           </div>
-          <div className="flex items-center justify-center gap-3 mb-4 animate-fade-in">
-            <Leaf className="h-12 w-12 text-primary animate-pulse" />
-            <h1 className="text-5xl font-bold text-foreground">{t('title')}</h1>
+
+          {/* Hero Title */}
+          <div className="flex flex-col items-center justify-center h-full mt-20">
+            <div className="flex items-center justify-center gap-3 mb-4 animate-fade-in">
+              <Leaf className="h-12 w-12 text-green-400 animate-pulse" />
+              <h1 className="text-5xl font-bold text-white drop-shadow-lg">
+                {t("title")}
+              </h1>
+            </div>
+            <p className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto animate-fade-in">
+              {t("subtitle")}
+            </p>
           </div>
-          <p className="text-center text-xl text-muted-foreground mb-8 animate-fade-in">
-            {t('subtitle')}
-          </p>
         </div>
       </div>
 
+      {/* 🌿 Plant Scanner */}
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <PlantScanner />
         </div>
 
+        {/* 🔍 Search and Filter */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
-              placeholder={t('search')}
+              placeholder={t("search")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
           </div>
+
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-full md:w-48">
-              <SelectValue placeholder={t('category')} />
+              <SelectValue placeholder={t("category")} />
             </SelectTrigger>
             <SelectContent>
-              {categories.map(cat => (
+              {categories.map((cat) => (
                 <SelectItem key={cat} value={cat}>
                   {t(cat)}
                 </SelectItem>
@@ -188,19 +223,27 @@ const Index = () => {
           </Select>
         </div>
 
+        {/* 🪴 Herb Grid */}
         {isLoading ? (
           <div className="text-center py-20">
             <Leaf className="h-12 w-12 animate-spin mx-auto text-primary" />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredHerbs.map(herb => (
-              <HerbCard key={herb.id} {...herb} scientificName={herb.scientific_name} imageUrl={herb.image_url} />
+            {filteredHerbs.map((herb) => (
+              <HerbCard
+                key={herb.id}
+                {...herb}
+                scientificName={herb.scientific_name}
+                imageUrl={herb.image_url}
+              />
             ))}
           </div>
         )}
-      </div>  <FloatingBot />
+      </div>
 
+      {/* 🤖 Floating Chat Bot */}
+      <FloatingBot />
     </div>
   );
 };
